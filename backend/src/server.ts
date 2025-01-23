@@ -2,6 +2,7 @@ import { ServerCredentials } from "@grpc/grpc-js";
 import { serverGRPC } from "./api/grpc";
 import { serverHTTP } from "./api/http";
 import { serverTRPC } from "./api/trpc";
+import { mongoClientRun } from "./database/mongo";
 
 const portGRPC: string = process.env.PORT_GRPC.toString();
 const portHTTP: number = process.env.PORT_HTTP;
@@ -27,3 +28,5 @@ try {
 	console.error("Error starting tRPC server:", error);
 	process.exit(1);
 }
+
+mongoClientRun().catch(console.dir);
