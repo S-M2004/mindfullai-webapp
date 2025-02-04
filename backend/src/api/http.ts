@@ -1,7 +1,10 @@
 import { createServer, IncomingMessage, ServerResponse } from "node:http";
 import { pageBasedRouting } from "../util/pageBasedRouting";
+import { authRouterHTTP } from "./router/auth";
 
-let appRouterHTTP: { [key: string]: (res: ServerResponse) => void } = {};
+let appRouterHTTP: {
+	[key: string]: (req: IncomingMessage, res: ServerResponse) => void;
+} = {};
 
 const router = pageBasedRouting("../frontend/pages");
 
@@ -9,14 +12,20 @@ router.forEach((routes) => {
 	const route = routes.route;
 	const html = routes.html;
 
-	appRouterHTTP[route] = (res: ServerResponse) => {
+	appRouterHTTP[route] = (req: IncomingMessage, res: ServerResponse) => {
 		res.writeHead(200, { "Content-Type": "text/html" });
 		res.write(html);
 		res.end();
 	};
 });
 
+appRouterHTTP = {
+	...appRouterHTTP,
+	...authRouterHTTP,
+};
+
 console.log(appRouterHTTP);
+
 export const serverHTTP = createServer(
 	(req: IncomingMessage, res: ServerResponse) => {
 		if (typeof req.url === "string") {
@@ -24,7 +33,7 @@ export const serverHTTP = createServer(
 			const handler = appRouterHTTP[pathName];
 
 			if (handler) {
-				handler(res);
+				handler(req, res);
 			} else {
 				res.statusCode = 404;
 				res.write("<h1>404 Not Found</h1>");
@@ -37,3 +46,4 @@ export const serverHTTP = createServer(
 		}
 	},
 );
+export type RouterHTTP = typeof appRouterHTTP;
